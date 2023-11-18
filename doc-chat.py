@@ -1,20 +1,14 @@
 import streamlit as st
 import pandas as pd
 import os
-from streamlit_chat import message
-from os.path import join as join_path
-import requests
-import re
 import base64
 from io import BytesIO
-import json
 from langchain.llms import OpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import (ChatPromptTemplate, HumanMessagePromptTemplate)
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field, validator
-from typing import List, Dict, TypedDict
-import random
+from typing import List
 
 def save_uploaded_file(uploadedfile):
     with open(os.path.join("data", uploadedfile.name), "wb") as f:
@@ -26,7 +20,7 @@ data_folder = 'data'
 files = []
 mapping_file_to_root = {}
 SAMPLE_SIZE = 100
-OPEN_API_KEY = "Insert API KEY Here (can also store it as a environment variable)"
+OPEN_API_KEY = 'ENTER API KEY HERE'
 # LLM Initialisation and prompt to be used. Can be placed in a separate file as we scale up the services
 template = '''
 You are a data scientist tasked to extract insights from review. I am giving you a list of reviews.\
@@ -96,7 +90,7 @@ if selected_file:
     if selected_file.endswith('.csv'):
         df = pd.read_csv(file_path)
     elif selected_file.endswith('.xlsx'):
-        df = pd.read_excel(file_path, index_col = 0)
+        df = pd.read_excel(file_path)
     st.write("Data First 5 Rows Preview")
     st.dataframe(df.head(5))
 
@@ -116,7 +110,6 @@ if selected_file:
         result_container = st.empty()
         with st.spinner('Fetching Results'):
             review_list = df[col_name].astype(str).tolist()
-            review_list = random.sample(review_list, SAMPLE_SIZE)
             if service_name == 'Topic Modelling':
                 llm_chain = LLMChain(llm = OpenAI(model_name = 'gpt-3.5-turbo-16k', openai_api_key = OPEN_API_KEY ), prompt= CLUSTER_PROMPT)
                 topics = llm_chain.run(reviews = review_list, no_of_topics = no_of_topics)
